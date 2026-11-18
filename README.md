@@ -56,15 +56,6 @@ pytest -q
 
 [Одно исключение](.github/dependency-check-suppressions.xml): сканер перепутал PyJWT с PHP-библиотекой и выдал чужую CVE-2025-45770.
 
-## Результаты
+## Отчёт
 
-[Успешный запуск CI](https://github.com/trikesh32/infosec-1/actions/runs/44381258541) · [Отчёт PDF](docs/report.pdf) · [Проверка curl](docs/evidence/curl-demo.txt)
-
-<details>
-<summary>Скриншоты SAST/SCA из артефактов GitHub Actions</summary>
-
-![Bandit](docs/screenshots/bandit.png)
-
-![OWASP Dependency-Check](docs/screenshots/dependency-check.png)
-
-</details>
+[PDF](docs/report.pdf) · [DOCX](docs/report.docx). Скриншоты проверок и результаты curl внутри.
