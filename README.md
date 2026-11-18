@@ -172,22 +172,17 @@ pip-audit -r requirements.txt
 
 Это учебный CI с security-проверками; автоматическое развёртывание не настроено.
 
-### Snyk по условию задания
+### OWASP Dependency-Check по условию задания
 
-Дополнительно настроен SCA через **Snyk**. Для включения:
+Отдельная задача **OWASP Dependency-Check** запускается на каждом push, pull request и при ручном запуске. Она проверяет `requirements.txt`, включая закреплённые транзитивные зависимости, и завершает проверку с ошибкой при CVSS ≥ 7. Для Python включён экспериментальный Pip Analyzer (`--enableExperimental`); дополнительный шаг проверяет, что отчёт действительно содержит Python-пакеты.
 
-1. Получите API token в своём аккаунте Snyk.
-2. Откройте репозиторий → **Settings → Secrets and variables → Actions → New repository secret**.
-3. Создайте секрет **`SNYK_TOKEN`**, вставьте токен как значение.
-4. Выполните push либо запустите workflow вручную.
+Используется [официальный Action Dependency-Check](https://github.com/dependency-check/Dependency-Check_Action) с базой уязвимостей в Docker-образе, которую его сопровождающие обновляют ежедневно. Аккаунт Snyk, `SNYK_TOKEN` и собственный NVD API key не нужны. Актуальность данных зависит от обновления образа; даты базы указаны в JSON-отчёте. Анализатор Python экспериментальный, поэтому `pip-audit` сохранён как дополнительный SCA.
 
-Snyk проверяет `requirements.txt`, сохраняет `snyk-report.json` в артефакт `snyk-results` и завершает шаг с ошибкой при **High/Critical**. Без токена выводится предупреждение о пропуске Snyk; это не означает успешное сканирование Snyk. Основной SCA через pip-audit работает без секретов на каждом push и PR.
+HTML- и JSON-отчёты сохраняются в артефакте **`dependency-check-results`** на 14 дней, в том числе при обнаружении уязвимостей. Для просмотра скачайте артефакт и откройте `dependency-check-report.html` в браузере. Отсутствие отчёта или распознанных Python-пакетов считается ошибкой, а не успешной проверкой.
 
-Snyk запускается на push и ручном запуске. На PR он отключён, чтобы не передавать секрет в окружение кода pull request. Для буквального выполнения требования об использовании Snyk или OWASP Dependency-Check включите Snyk и получите успешный запуск после push.
+В [Actions репозитория](https://github.com/trikesh32/infosec-1/actions/workflows/ci.yml) выберите запуск и проверьте **Tests**, **SAST — Bandit**, **SCA — pip-audit** и **SCA — OWASP Dependency-Check**. JSON-отчёты Bandit и pip-audit доступны в артефакте `security-results`.
 
-В [Actions репозитория](https://github.com/trikesh32/infosec-1/actions/workflows/ci.yml) выберите запуск и проверьте **Tests**, **SAST — Bandit**, **SCA — pip-audit** и при включённом Snyk — **SCA — Snyk**. JSON-файлы доступны в разделе **Artifacts**. Ссылка на отдельный запуск имеет вид `https://github.com/trikesh32/infosec-1/actions/runs/<run_id>`.
-
-Отдельный отчёт и скриншоты не включены. Реальный запуск GitHub Actions появится после отправки кода в репозиторий; локальные тесты не заменяют его.
+Для сдачи приложите ссылку на последний успешный запуск и скриншоты отчётов Bandit и Dependency-Check. Отдельный PDF-отчёт и скриншоты пока не включены в репозиторий.
 
 ## Ограничения учебного примера
 
@@ -224,5 +219,5 @@ SAST исследует исходный код без запуска прило
 - [Flask-Limiter](https://flask-limiter.readthedocs.io/en/stable/)
 - [Bandit](https://bandit.readthedocs.io/)
 - [pip-audit](https://github.com/pypa/pip-audit)
-- [Snyk GitHub Actions](https://github.com/snyk/actions)
+- [OWASP Dependency-Check Action](https://github.com/dependency-check/Dependency-Check_Action)
 - [GitHub Actions](https://docs.github.com/en/actions)

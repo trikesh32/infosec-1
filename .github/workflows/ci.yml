@@ -36,34 +36,46 @@ jobs:
           path: '*-report.json'
           retention-days: 14
 
-  snyk:
-    # Секреты не выдаются PR из форков. Основной SCA выше работает на каждом PR.
-    if: github.event_name != 'pull_request'
+  dependency-check:
+    name: OWASP Dependency-Check
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    env:
-      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    timeout-minutes: 20
     steps:
-      - name: Explain missing Snyk token
-        if: env.SNYK_TOKEN == ''
-        run: echo '::warning::Snyk skipped. Add SNYK_TOKEN to repository secrets to enable it. pip-audit runs independently.'
       - uses: actions/checkout@v4
-        if: env.SNYK_TOKEN != ''
-      - uses: actions/setup-python@v5
-        if: env.SNYK_TOKEN != ''
+      # Official image includes a regularly refreshed vulnerability database.
+      - name: SCA — OWASP Dependency-Check
+        uses: dependency-check/Dependency-Check_Action@1e54355a8b4c8abaa8cc7d0b70aa655a3bb15a6c
         with:
-          python-version: '3.14'
-      - name: Install dependencies
-        if: env.SNYK_TOKEN != ''
-        run: python -m pip install -r requirements.txt
-      - uses: snyk/actions/setup@master
-        if: env.SNYK_TOKEN != ''
-      - name: SCA — Snyk
-        if: env.SNYK_TOKEN != ''
-        run: snyk test --file=requirements.txt --package-manager=pip --command=python --severity-threshold=high --json-file-output=snyk-report.json
-      - uses: actions/upload-artifact@v4
-        if: always() && env.SNYK_TOKEN != ''
+          project: infosec-1
+          path: requirements.txt
+          format: HTML
+          out: dependency-check-reports
+          args: >-
+            --format JSON
+            --enableExperimental
+            --failOnCVSS 7
+      - name: Verify Python dependencies were scanned
+        if: ${{ !cancelled() }}
+        run: |
+          python3 - <<'PYTHON'
+          import json
+          from pathlib import Path
+
+          report = json.loads(Path('dependency-check-reports/dependency-check-report.json').read_text())
+          dependencies = report.get('dependencies', [])
+          packages = [package['id'] for dependency in dependencies
+                      for package in dependency.get('packages', [])
+                      if package.get('id', '').startswith('pkg:pypi/')]
+          if not packages:
+              raise SystemExit('Dependency-Check did not identify any Python packages')
+          print(f'Identified {len(packages)} Python packages:')
+          print('\n'.join(sorted(packages)))
+          PYTHON
+      - name: Upload Dependency-Check reports
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: snyk-results
-          path: snyk-report.json
+          name: dependency-check-results
+          path: dependency-check-reports/
+          if-no-files-found: error
           retention-days: 14
