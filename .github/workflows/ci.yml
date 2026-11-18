@@ -54,6 +54,7 @@ jobs:
             --format JSON
             --enableExperimental
             --failOnCVSS 7
+            --suppression /github/workspace/.github/dependency-check-suppressions.xml
       - name: Verify Python dependencies were scanned
         if: ${{ !cancelled() }}
         run: |

@@ -178,6 +178,8 @@ pip-audit -r requirements.txt
 
 Используется [официальный Action Dependency-Check](https://github.com/dependency-check/Dependency-Check_Action) с базой уязвимостей в Docker-образе, которую его сопровождающие обновляют ежедневно. Аккаунт Snyk, `SNYK_TOKEN` и собственный NVD API key не нужны. Актуальность данных зависит от обновления образа; даты базы указаны в JSON-отчёте. Анализатор Python экспериментальный, поэтому `pip-audit` сохранён как дополнительный SCA.
 
+В [файле исключений](.github/dependency-check-suppressions.xml) документировано одно ложное срабатывание: CVE-2025-45770 относится к PHP-пакету `lcobucci/jwt`, который сканер ошибочно сопоставляет с Python-пакетом `PyJWT`. Исключение ограничено `pkg:pypi/pyjwt@2.15.1` и этой конкретной CVE; другие уязвимости продолжают проверяться.
+
 HTML- и JSON-отчёты сохраняются в артефакте **`dependency-check-results`** на 14 дней, в том числе при обнаружении уязвимостей. Для просмотра скачайте артефакт и откройте `dependency-check-report.html` в браузере. Отсутствие отчёта или распознанных Python-пакетов считается ошибкой, а не успешной проверкой.
 
 В [Actions репозитория](https://github.com/trikesh32/infosec-1/actions/workflows/ci.yml) выберите запуск и проверьте **Tests**, **SAST — Bandit**, **SCA — pip-audit** и **SCA — OWASP Dependency-Check**. JSON-отчёты Bandit и pip-audit доступны в артефакте `security-results`.

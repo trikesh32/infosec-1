@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.4.xsd">
+  <suppress>
+    <notes><![CDATA[
+      Reviewed 2026-11-18: CVE-2025-45770 concerns the PHP package lcobucci/jwt,
+      not the Python package PyJWT. Dependency-Check 13.0.0 incorrectly maps
+      pkg:pypi/pyjwt@2.15.1 to cpe:2.3:a:jwt_project:jwt (LOW confidence).
+      This exception covers only this exact Python package/version and CVE.
+      Evidence: https://nvd.nist.gov/vuln/detail/CVE-2025-45770
+      Product referenced by the CVE: https://github.com/lcobucci/jwt
+      Actual package: https://github.com/jpadilla/pyjwt
+    ]]></notes>
+    <packageUrl>pkg:pypi/pyjwt@2.15.1</packageUrl>
+    <cve>CVE-2025-45770</cve>
+  </suppress>
+</suppressions>
