@@ -55,3 +55,16 @@ pytest -q
 [Запуски CI и отчёты](https://github.com/trikesh32/infosec-1/actions/workflows/ci.yml). Отчёты лежат в артефактах `security-results` и `dependency-check-results`, хранятся 14 дней.
 
 [Одно исключение](.github/dependency-check-suppressions.xml): сканер перепутал PyJWT с PHP-библиотекой и выдал чужую CVE-2025-45770.
+
+## Результаты
+
+[Успешный запуск CI](https://github.com/trikesh32/infosec-1/actions/runs/44381258541) · [Отчёт PDF](docs/report.pdf) · [Проверка curl](docs/evidence/curl-demo.txt)
+
+<details>
+<summary>Скриншоты SAST/SCA из артефактов GitHub Actions</summary>
+
+![Bandit](docs/screenshots/bandit.png)
+
+![OWASP Dependency-Check](docs/screenshots/dependency-check.png)
+
+</details>

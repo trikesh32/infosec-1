@@ -1,0 +1,66 @@
+<!doctype html><html lang="ru"><meta charset="utf-8"><title>Лабораторная работа 1</title><style>@page {size:A4; margin:18mm 20mm;} body {font-family:"Times New Roman",serif;font-size:12pt;line-height:1.25;margin:0;color:#111} section {break-after:page;} section:last-child{break-after:auto} h1{font-size:17pt;margin:0 0 14px} h2{font-size:15pt;margin:16px 0 8px} p{margin:8px 0} pre{font:9pt/1.35 monospace;white-space:pre-wrap;overflow-wrap:anywhere;background:#f4f4f4;padding:10px} code{font-size:9pt} table{border-collapse:collapse;width:100%;font-size:10pt} th,td{border:1px solid #bbb;padding:5px;text-align:left} ul{padding-left:22px} li{margin:6px 0} img{max-width:100%;height:auto;max-height:205mm;object-fit:contain} img.bandit{max-height:210mm;display:block;margin:auto} a{color:#164a80;overflow-wrap:anywhere} .caption{font-size:10pt;text-align:center} .title{text-align:center;font-size:14pt;position:relative;height:250mm} .title p{margin:12px 0} .lab{margin-top:45mm} .author{text-align:right;margin-top:35mm!important} .city{position:absolute;bottom:8mm;width:100%}</style><body><section class="title">
+<p>Федеральное государственное автономное образовательное<br>учреждение высшего образования<br>«Национальный исследовательский университет ИТМО»</p>
+<p>Факультет программной инженерии и компьютерной техники</p>
+<p>Дисциплина «Информационная безопасность»</p>
+<div class="lab"><p>Отчёт по лабораторной работе №1</p><p>«Разработка защищенного REST API<br>с интеграцией в CI/CD»</p></div>
+<p class="author">Выполнил:<br>Trikashnyi Mikhail, группа P3406</p>
+<p class="city">Санкт-Петербург<br>2026 г.</p>
+</section><section><h1>1. Проект и README.md</h1><p>Репозиторий: <a href="https://github.com/trikesh32/infosec-1">github.com/trikesh32/infosec-1</a></p><h1>Лаба 1. Защищённый REST API</h1>
+<p>API для заметок на Flask + SQLite. Можно войти, создать заметку и получить свои заметки.</p>
+<h2>Запуск</h2>
+<p>Нужен Python 3.14. Из папки проекта:</p>
+<pre><code class="language-bash">python3.14 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+export JWT_SECRET=&quot;$(python -c 'import secrets; print(secrets.token_hex(32))')&quot;
+flask --app app create-user alice
+flask --app app run
+</code></pre>
+<p>При создании пользователя вводится пароль от 12 до 128 символов. База создаётся сама.</p>
+<h2>API</h2>
+<table>
+<thead>
+<tr>
+<th>Метод</th>
+<th>Что делает</th>
+<th>JSON запроса</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST /auth/login</code></td>
+<td>Выдаёт JWT</td>
+<td><code>{"username":"alice","password":"YOUR_PASSWORD"}</code></td>
+</tr>
+<tr>
+<td><code>POST /api/data</code></td>
+<td>Создаёт заметку</td>
+<td><code>{"text":"Текст заметки"}</code></td>
+</tr>
+<tr>
+<td><code>GET /api/data</code></td>
+<td>Возвращает свои заметки</td>
+<td>Не нужен</td>
+</tr>
+</tbody>
+</table>
+<p>Пример входа, вместо <code>YOUR_PASSWORD</code> нужно поставить свой пароль:</p>
+<pre><code class="language-bash">curl http://127.0.0.1:5000/auth/login -H 'Content-Type: application/json' \
+  -d '{&quot;username&quot;:&quot;alice&quot;,&quot;password&quot;:&quot;YOUR_PASSWORD&quot;}'
+</code></pre>
+<p>Для <code>/api/data</code> нужен заголовок <code>Authorization: Bearer &lt;access_token&gt;</code> с токеном из ответа. Для POST ещё нужен <code>Content-Type: application/json</code>. Без токена будет 401.</p></section><section><h2>Защита</h2>
+<ul>
+<li>SQLi: значения передаются через параметры <code>?</code>, а не склеиваются с SQL.</li>
+<li>XSS: текст заметок экранируется через <code>markupsafe.escape()</code> при выдаче в JSON.</li>
+<li>Пароли хранятся как scrypt-хэши с солью.</li>
+<li>JWT подписан HS256 и живёт 15 минут. Проверяются подпись, срок, issuer и audience. Секрет берётся из окружения.</li>
+<li>ID владельца берётся из токена. Пользователь видит только свои заметки.</li>
+<li>Вход ограничен 5 запросами в минуту с IP.</li>
+</ul>
+<h2>Проверки</h2>
+<pre><code class="language-bash">pip install -r requirements-dev.txt
+pytest -q
+</code></pre>
+<p>На push и PR запускаются тесты, Bandit, pip-audit и OWASP Dependency-Check. Dependency-Check роняет сборку при CVSS от 7. Для Python включён экспериментальный анализатор.</p>
+<p><a href="https://github.com/trikesh32/infosec-1/actions/workflows/ci.yml">Запуски CI и отчёты</a>. Отчёты лежат в артефактах <code>security-results</code> и <code>dependency-check-results</code>, хранятся 14 дней.</p>
+<p><a href="../.github/dependency-check-suppressions.xml">Одно исключение</a>: сканер перепутал PyJWT с PHP-библиотекой и выдал чужую CVE-2025-45770.</p><p>Успешный запуск: <a href="https://github.com/trikesh32/infosec-1/actions/runs/44381258541">https://github.com/trikesh32/infosec-1/actions/runs/44381258541</a></p><p>Скриншоты из README приведены на следующих страницах. Исходные отчёты из этого запуска сохранены в docs/evidence.</p></section><section><h1>2. SAST: Bandit</h1><p>Скриншот JSON-отчёта из артефакта security-results. Список results пуст, ошибок анализа нет.</p><img class="bandit" src="screenshots/bandit.png"><p class="caption">Рисунок 1. Отчёт Bandit из GitHub Actions</p></section><section><h1>3. SCA: OWASP Dependency-Check</h1><p>Проверены 15 зависимостей. После исключения одного ложного срабатывания найденных уязвимостей нет. CVE-2025-45770 относится к PHP-пакету lcobucci/jwt, а не к PyJWT. Исключение ограничено этой CVE и PyJWT 2.15.1.</p><img src="screenshots/dependency-check.png"><p class="caption">Рисунок 2. HTML-отчёт из артефакта dependency-check-results</p></section><section><h1>4. Проверка API через curl</h1><p>Запустил приложение с временной базой и создал пользователя. Вход вернул 200 и JWT, создание заметки 201, чтение 200. Без токена получил 401. Пароль и токен в записи скрыты.</p><img src="screenshots/curl.png"><p class="caption">Рисунок 3. Сохранённые команды curl и ответы API</p></section><section><h1>5. GitHub Actions</h1><p>Тесты, Bandit, pip-audit и Dependency-Check прошли. Ссылка на запуск: <a href="https://github.com/trikesh32/infosec-1/actions/runs/44381258541">https://github.com/trikesh32/infosec-1/actions/runs/44381258541</a>.</p><img src="screenshots/ci.png"><p class="caption">Рисунок 4. Успешный запуск pipeline</p><p>API работает, доступ без токена закрыт. Проверки безопасности запускаются автоматически.</p></section></body></html>
