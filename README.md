@@ -58,4 +58,4 @@ pytest -q
 
 ## Отчёт
 
-[PDF](docs/report.pdf) · [DOCX](docs/report.docx). Скриншоты проверок и результаты curl внутри.
+[PDF](docs/report.pdf) · [DOCX](docs/report.docx). Описание API и мер защиты, скриншоты проверок и ссылка на запуск CI внутри.
